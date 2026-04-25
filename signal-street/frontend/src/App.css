@@ -1,38 +1,154 @@
 .container {
+  padding-top: 80px;
+  min-height: 100vh;
+  background: #111214;
+  display: flex;
+  flex: 1;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100vw;
+  background: #111214;
+  color: #fff;
+}
+
+h1, h2, h3, p {
+  color: inherit;
+}
+
+nav {
+  background: #212121;
+  padding: 15px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.container {
   display: flex;
   height: 100vh;
   font-family: Arial, sans-serif;
 }
 
-/* LEFT PANEL */
 .list {
   width: 35%;
-  border-right: 1px solid #ddd;
   padding: 20px;
   overflow-y: auto;
 }
 
+.list::-webkit-scrollbar {
+  display: none;
+}
+
 .card {
-  padding: 12px;
-  margin-bottom: 10px;
+  background: #312f2f;
+  position: relative;
   border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
   cursor: pointer;
-  border: 1px solid #ddd;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
 }
 
 .card:hover {
-  background: #f5f5f5;
+  background-color: #413f3f;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.card.selected {
+  background-color: #413f3f;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  opacity: 0.7;
 }
 
 /* RIGHT PANEL */
 .details {
   flex: 1;
-  padding: 30px;
+  margin: 20px;
+  padding: 25px;
+
+  background: #312f2f;
+  border-radius: 12px;
+
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+
+  overflow: hidden;
+}
+
+.details-content {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.35s ease-out;
+}
+
+.details-content.show {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .box {
   margin-top: 30px;
   padding: 15px;
-  border: 1px solid #ddd;
   border-radius: 10px;
+}
+
+button {
+  margin: 10px 5px;
+  background-color: #312f2f;
+  padding: 10px 20px;
+  border: 1px solid #413f3f;
+  border-radius: 22px;
+  cursor: pointer;
+}
+
+.buy {
+  border-color: green;
+  color: green;
+}
+
+.buy:hover {
+  background-color: green;
+  color: #312f2f;
+  transform: scale(1.05);
+}
+
+.sell {
+  border-color: red;
+  color: red;
+}
+
+.sell:hover {
+  background-color: red;
+  color: #312f2f;
+  transform: scale(1.05);
+}
+
+.hold {
+  border-color: #e6960c;
+  color: #e6960c;
+}
+
+.hold:hover {
+  background-color: #e6960c;
+  color: #312f2f;
+  transform: scale(1.05);
 }

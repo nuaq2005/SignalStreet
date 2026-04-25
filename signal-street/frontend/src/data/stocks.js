@@ -23,4 +23,20 @@ export const stocks = [
     change: +0.8,
     description: "Amazon is an e-commerce and cloud computing giant.",
   },
+  {
+    id: 4,
+    name: "Google",
+    ticker: "GOOGL",
+    price: 2800.00,
+    change: +1.5,
+    description: "Google is a multinational technology company specializing in internet-related services and products.",
+  },
+  {
+    id: 5,
+    name: "Microsoft",
+    ticker: "MSFT",
+    price: 300.50,
+    change: -0.3,
+    description: "Microsoft develops, licenses, and supports software, services, devices, and solutions worldwide.",
+  }
 ];

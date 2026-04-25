@@ -42,6 +42,7 @@ st.markdown("""
         background: #1a1200; border: 1px solid #ff9100;
         border-radius: 8px; padding: 12px 16px; margin-top: 8px;
     }
+            
     .clean-box    {
         background: #001a0a; border: 1px solid #00c853;
         border-radius: 8px; padding: 12px 16px; margin-top: 8px;

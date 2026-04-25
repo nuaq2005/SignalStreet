@@ -3,14 +3,17 @@ import { stocks } from "./data/stocks";
 import "./App.css";
 
 export default function App() {
-  const [selectedStock, setSelectedStock] = useState(stocks[0]);
+  const [selectedStock, setSelectedStock] = useState(null);
 
   return (
     <div className="container">
-      
+      {/* NAV BAR */}
+      <nav className="navbar">
+        <p>Signal Street</p>
+      </nav>
+
       {/* LEFT SIDE */}
       <div className="list">
-        <h2>📈 Signal Street</h2>
 
         {stocks.map((stock) => {
           const isUp = stock.change >= 0;
@@ -19,13 +22,9 @@ export default function App() {
             <div
               key={stock.id}
               className="card"
-              onClick={() => setSelectedStock(stock)}
-              style={{
-                border:
-                  selectedStock.id === stock.id
-                    ? "2px solid black"
-                    : "1px solid #ddd",
-              }}
+              onClick={() => setSelectedStock(prev => 
+                prev && prev.id === stock.id ? null : stock
+              )}
             >
               <h3>{stock.name}</h3>
               <p>{stock.ticker}</p>
@@ -34,30 +33,46 @@ export default function App() {
               <p style={{ color: isUp ? "green" : "red" }}>
                 {isUp ? "▲" : "▼"} {stock.change}%
               </p>
+              
+              <div className="arrow">
+                {selectedStock?.id === stock.id ? "◀" : ""}
+              </div>
             </div>
           );
         })}
       </div>
 
       {/* RIGHT SIDE */}
-      <div className="details">
-        <h1>{selectedStock.name}</h1>
-        <h2>{selectedStock.ticker}</h2>
+        <div className= "details">
+        {selectedStock ? (
+          <div 
+            key = {selectedStock.id}
+            className="details-content show"
+          >
 
-        <h2>${selectedStock.price}</h2>
+          <h1>{selectedStock.name}</h1>
+          <h2>{selectedStock.ticker}</h2>
+          <h2>${selectedStock.price}</h2>
 
         <p style={{ color: selectedStock.change >= 0 ? "green" : "red" }}>
           {selectedStock.change >= 0 ? "Up" : "Down"} {selectedStock.change}%
-        </p>
-
+          </p>
         <p style={{ marginTop: "20px" }}>
           {selectedStock.description}
         </p>
 
-        <div className="box">
-          <p>📊 More analytics coming soon</p>
-          <p>🧠 ML signals will go here later</p>
+        <div>
+          <button className="buy">Buy</button>
+          <button className="sell">Sell</button>
+          <button className="hold">Hold</button>
         </div>
+
+        </div>
+          ) : (
+          <div className="details-content show">
+            <h2>Select a stock</h2>
+          </div>
+          )}
       </div>
     </div>
   );
