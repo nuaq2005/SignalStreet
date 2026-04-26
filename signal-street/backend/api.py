@@ -51,10 +51,22 @@ def analyze():
     # ── fetch live features ───────────────────────────────────────────
     t0 = time.perf_counter()
  
-    try:
-        live = get_live_features(ticker)
-    except Exception as exc:
-        return jsonify({"error": f"Could not fetch data for {ticker}: {exc}"}), 502
+    #try:
+    #    live = get_live_features(ticker)
+    #except Exception as exc:
+    #    return jsonify({"error": f"Could not fetch data for {ticker}: {exc}"}), 502
+
+    live = get_live_features(ticker)
+    
+    if live is None or "feature_vector" not in live:
+        return jsonify({
+        "signal": "HOLD",
+        "confidence": 0.5,
+        "prob_buy": 0.33,
+        "prob_sell": 0.33,
+        "prob_hold": 0.34,
+        "note": "fallback mode"
+    }), 200
  
     fv = live["feature_vector"]
  

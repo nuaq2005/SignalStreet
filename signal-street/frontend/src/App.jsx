@@ -1,13 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
+import mockData from "./mockData.json";
 
-// ── static watchlist loaded from your stocks.csv names ───────────────────────
-// You can replace this array with a dynamic fetch if you serve the CSV too.
-
-
-const API = "http://localhost:5000";
-
-// ── tiny sparkline via SVG ────────────────────────────────────────────────────
 function Sparkline({ data, color }) {
   if (!data || data.length < 2) return null;
   const prices = data.map((d) => d.close);
@@ -37,7 +31,6 @@ function Sparkline({ data, color }) {
   );
 }
 
-// ── probability bar ───────────────────────────────────────────────────────────
 function ProbBar({ label, value, color }) {
   return (
     <div className="prob-bar-row">
@@ -50,7 +43,6 @@ function ProbBar({ label, value, color }) {
   );
 }
 
-// ── metric cell ───────────────────────────────────────────────────────────────
 function Metric({ label, value }) {
   return (
     <div className="metric-cell">
@@ -60,9 +52,8 @@ function Metric({ label, value }) {
   );
 }
 
-// ── main app ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [watchlist, setWatchlist] = useState([]);
+  const [watchlist]               = useState(mockData.watchlist);
   const [selected, setSelected]   = useState(null);
   const [analysis, setAnalysis]   = useState(null);
   const [loading, setLoading]     = useState(false);
@@ -71,48 +62,23 @@ export default function App() {
   const [blinkKey, setBlinkKey]   = useState(0);
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    fetch(`${API}/watchlist`)
-      .then((r) => r.json())
-      .then((data) => setWatchlist(data))
-      .catch(() => {
-        // fallback static list if server not yet ready
-        setWatchlist([
-          { id: 1,  ticker: "AAPL",  name: "Apple Inc." },
-          { id: 2,  ticker: "MSFT",  name: "Microsoft" },
-          { id: 3,  ticker: "NVDA",  name: "NVIDIA" },
-          { id: 4,  ticker: "TSLA",  name: "Tesla" },
-          { id: 5,  ticker: "AMZN",  name: "Amazon" },
-          { id: 6,  ticker: "GOOGL", name: "Alphabet" },
-          { id: 7,  ticker: "META",  name: "Meta" },
-          { id: 8,  ticker: "JPM",   name: "JPMorgan" },
-          { id: 9,  ticker: "BAC",   name: "Bank of America" },
-          { id: 10, ticker: "GS",    name: "Goldman Sachs" },
-          { id: 11, ticker: "XOM",   name: "ExxonMobil" },
-          { id: 12, ticker: "CVX",   name: "Chevron" },
-        ]);
-      });
-  }, []);
-  
-  async function analyze(ticker) {
+  function analyze(ticker) {
     setLoading(true);
     setError(null);
-    setAnalysis(null);
-    try {
-      const res = await fetch(`${API}/analyze`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ ticker }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "API error");
-      setAnalysis(data);
+
+    // Simulate a brief loading delay so the spinner shows
+    setTimeout(() => {
+      const result = mockData.analysis[ticker];
+      if (!result) {
+        setError(`No data for ticker "${ticker}"`);
+        setLoading(false);
+        return;
+      }
+      setAnalysis(result);
+      setSelected(ticker);
       setBlinkKey((k) => k + 1);
-    } catch (err) {
-      setError(err.message);
-    } finally {
       setLoading(false);
-    }
+    }, 400);
   }
 
   function handleWatchlistClick(stock) {
@@ -129,7 +95,6 @@ export default function App() {
     setSearch("");
   }
 
-  // keyboard shortcut: "/" to focus search
   useEffect(() => {
     const handler = (e) => {
       if (e.key === "/" && document.activeElement !== inputRef.current) {
@@ -141,8 +106,8 @@ export default function App() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const sig       = analysis?.signal ?? null;
-  const sigColor  = sig === "BUY" ? "#00e676" : sig === "SELL" ? "#ff1744" : "#ff9100";
+  const sig      = analysis?.signal ?? null;
+  const sigColor = sig === "BUY" ? "#00e676" : sig === "SELL" ? "#ff1744" : "#ff9100";
   const histColor = analysis
     ? analysis.price_change >= 0 ? "#00e676" : "#ff1744"
     : "#00e676";
@@ -192,7 +157,6 @@ export default function App() {
       {/* ── main panel ───────────────────────────────────────────── */}
       <main className="main">
 
-        {/* empty state */}
         {!selected && !loading && (
           <div className="empty-state">
             <div className="empty-icon">▲</div>
@@ -201,16 +165,14 @@ export default function App() {
           </div>
         )}
 
-        {/* loading */}
         {loading && (
           <div className="empty-state">
             <div className="spinner" />
             <div className="empty-title">FETCHING {selected}</div>
-            <div className="empty-sub">Pulling market data · running ensemble inference…</div>
+            <div className="empty-sub">Running ensemble inference…</div>
           </div>
         )}
 
-        {/* error */}
         {error && !loading && (
           <div className="empty-state">
             <div className="empty-icon" style={{ color: "#ff1744" }}>✕</div>
@@ -219,11 +181,9 @@ export default function App() {
           </div>
         )}
 
-        {/* result */}
         {analysis && !loading && (
           <div className="result" key={blinkKey}>
 
-            {/* ── top bar ──────────────────────────────────────── */}
             <div className="result-topbar">
               <div className="result-ticker">{analysis.ticker}</div>
               <div className="result-price">
@@ -241,7 +201,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* ── signal block ─────────────────────────────────── */}
             <div className="signal-block">
               <div className="signal-word" style={{ color: sigColor }}>
                 {analysis.signal}
@@ -251,14 +210,12 @@ export default function App() {
               </div>
             </div>
 
-            {/* ── probability bars ─────────────────────────────── */}
             <div className="prob-section">
               <ProbBar label="BUY"  value={analysis.prob_buy}  color="#00e676" />
               <ProbBar label="SELL" value={analysis.prob_sell} color="#ff1744" />
               <ProbBar label="HOLD" value={analysis.prob_hold} color="#ff9100" />
             </div>
 
-            {/* ── chart ────────────────────────────────────────── */}
             <div className="chart-section">
               <div className="section-label">PRICE HISTORY (90d)</div>
               <Sparkline data={analysis.history} color={histColor} />
@@ -270,7 +227,6 @@ export default function App() {
               )}
             </div>
 
-            {/* ── metrics grid ─────────────────────────────────── */}
             <div className="metrics-grid">
               <Metric label="VOLUME"     value={Math.round(analysis.volume).toLocaleString()} />
               <Metric label="RSI (14)"   value={analysis.rsi.toFixed(1)} />
@@ -278,7 +234,6 @@ export default function App() {
               <Metric label="VOLATILITY" value={`${(analysis.volatility * 100).toFixed(2)}%`} />
             </div>
 
-            {/* ── action strip ─────────────────────────────────── */}
             <div className="action-strip">
               <button
                 className="action-btn buy-btn"

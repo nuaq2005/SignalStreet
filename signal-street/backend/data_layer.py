@@ -199,7 +199,16 @@ def get_live_features(ticker):
         {d: 0   for d in raw.date},
     )
     g = add_features(raw, *maps).dropna()
-    r = g.iloc[-1]
+
+    if g.empty: 
+        return {
+        "feature_vector": np.zeros(len(FEATURE_COLS)),
+        "price": float(raw.close.iloc[-1]) if "close" in raw and len(raw) else 0,
+        "history": raw[["close"]] if "close" in raw else None
+        } 
+    #added in
+
+    r = g.iloc[-1] 
     return {
         'feature_vector': r[FEATURE_COLS].values.astype(float),
         'price':          float(r.close),
