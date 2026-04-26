@@ -421,7 +421,13 @@ def _load_or_train():
         return joblib.load(MODEL_PATH)
     return build_model()
 
-_BUNDLE = _load_or_train()
+_BUNDLE = None
+
+def get_bundle():
+    global _BUNDLE
+    if __name__ == "__main__":
+        _BUNDLE = _load_or_train()  # or load_model() later
+    return _BUNDLE
 
 def _ensemble_proba(X_raw):
     """Average softmax probabilities across all fold models."""

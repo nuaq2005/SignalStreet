@@ -179,6 +179,7 @@ def walk_forward_splits(df, years_test=1, max_folds=3):
     return folds
 
 # ---------- live ----------
+
 def get_live_features(ticker):
     import yfinance as yf
     raw = yf.download(ticker, period='220d', interval='1d', progress=False)
