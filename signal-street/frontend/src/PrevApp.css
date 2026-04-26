@@ -152,36 +152,3 @@ button {
   color: #312f2f;
   transform: scale(1.05);
 }
-
-.big-signal {
-  font-size: 52px;
-  font-weight: 800;
-  margin: 10px 0;
-}
-
-.buy { color: #00c853; }
-.sell { color: #ff1744; }
-.hold { color: #ff9100; }
-
-.conf-label {
-  color: #888;
-  margin-top: 5px;
-}
-
-.prob-row {
-  color: #aaa;
-  font-size: 13px;
-}
-
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.metric {
-  background: #1a1a1a;
-  padding: 10px;
-  border-radius: 8px;
-}
