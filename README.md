@@ -19,7 +19,7 @@ SignalStreet follows a client-server architecture with a clear separation of con
 - **Data Layer**: Handles stock data retrieval using yfinance.
 - **ML Model**: Pre-trained model loaded on-demand for predictions.
 - **Testing**: Separate testing suite for backend components.
-- [**The Model**](https://drive.google.com/file/d/1hfTFqFfyTzsVzxnGBkuV8CCaBc77fEeY/view?usp=sharing)
+- [**The Model**]
 
 ### Architecture Diagram
 
