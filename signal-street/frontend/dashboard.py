@@ -109,21 +109,12 @@ col_sig, col_chart = st.columns([1, 2])
 
 with col_sig:
     st.subheader(f"{ticker} — Latest Signal")
-    css_cls = decision.signal.lower()
+    st.markdown(f"### {decision.signal}")
     st.markdown(
-        f'<p class="big-signal {css_cls}">{decision.signal}</p>',
-        unsafe_allow_html=True
+        f"**Confidence:** {decision.confidence:.0%} · {lat_ms:.1f} ms inference"
     )
     st.markdown(
-        f'<p class="conf-label">{decision.confidence:.0%} confidence '
-        f'· {lat_ms:.1f} ms inference</p>',
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        f'<p class="prob-row">BUY {decision.prob_buy:.0%} · '
-        f'SELL {decision.prob_sell:.0%} · '
-        f'HOLD {decision.prob_hold:.0%}</p>',
-        unsafe_allow_html=True
+        f"BUY {decision.prob_buy:.0%} · SELL {decision.prob_sell:.0%} · HOLD {decision.prob_hold:.0%}"
     )
     st.divider()
 
@@ -162,10 +153,8 @@ oc4.metric("p50 Latency",   f"{obs_summary['p50_latency_ms']:.1f} ms")
 oc5.metric("p99 Latency",   f"{obs_summary['p99_latency_ms']:.1f} ms")
 
 if ood_rate > 0.20:
-    st.markdown(
-        '<div class="obs-box">⚠️ High out-of-distribution input rate. '
-        'Model may be operating outside its training distribution.</div>',
-        unsafe_allow_html=True
+    st.warning(
+        "High out-of-distribution input rate. Model may be operating outside its training distribution."
     )
 
 st.divider()
@@ -196,12 +185,9 @@ st.divider()
 if report.weaknesses:
     st.markdown("#### ⚠️ Known Model Weaknesses")
     for w in report.weaknesses:
-        st.markdown(f'<div class="warning-box">⚠️ {w}</div>', unsafe_allow_html=True)
+        st.warning(w)
 else:
-    st.markdown(
-        '<div class="clean-box">✅ No weaknesses found across all 10 properties.</div>',
-        unsafe_allow_html=True
-    )
+    st.success("✅ No weaknesses found across all 10 properties.")
 
 st.divider()
 
