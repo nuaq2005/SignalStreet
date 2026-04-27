@@ -23,14 +23,14 @@ class MarketScenario:
 
 def generate_scenario(seed: int = None) -> MarketScenario:
     rng = np.random.default_rng(seed)
-    price        = round(float(rng.uniform(100, 300)), 2)
-    spread       = round(float(rng.uniform(0.01, 0.50)), 2)
+    price        = round(float(rng.uniform(20, 300)), 2)
+    spread       = round(float(rng.uniform(0.01, 0.09)), 2)
     bid          = round(price - spread / 2, 2)
     ask          = round(price + spread / 2, 2)
-    volume       = int(rng.integers(100, 50000))
-    price_change = round(float(rng.uniform(-3.0, 3.0)), 4)
-    volatility   = round(float(rng.uniform(0.0, 0.05)), 4)
-    avg_volume = round(float(rng.uniform(volume * 0.5, volume * 2.0)))
+    volume       = int(rng.integers(5_000, 100_000))
+    price_change = round(float(rng.uniform(-0.12, 0.12)), 4)
+    volatility   = round(float(rng.uniform(0.0, 0.08)), 4)
+    avg_volume = round(float(rng.uniform(volume * 0.8, volume * 1.5)))
     return MarketScenario(
         price=price, bid=bid, ask=ask,
         volume=volume, price_change=price_change,

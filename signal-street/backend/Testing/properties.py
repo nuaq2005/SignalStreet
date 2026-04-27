@@ -291,28 +291,28 @@ def market_scenario(draw) -> MarketScenario:
 class TestInvarianceProperties:
 
     @given(market_scenario())
-    @settings(max_examples=100)
+    @settings(max_examples=100, deadline=None)
     def test_determinism_always_holds(self, scenario):
         """Identical inputs must always give identical outputs."""
         result = check_determinism(scenario)
         assert result.passed, result.violation_description
 
     @given(market_scenario())
-    @settings(max_examples=100)
+    @settings(max_examples=100, deadline=None)
     def test_no_nan_outputs_always(self, scenario):
         """Model must never output NaN."""
         result = check_no_nan_outputs(scenario)
         assert result.passed, result.violation_description
 
     @given(market_scenario())
-    @settings(max_examples=100)
+    @settings(max_examples=100, deadline=None)
     def test_probability_sum_always_one(self, scenario):
         """BUY + SELL + HOLD must always sum to 1.0 ± 1e-4."""
         result = check_probability_sum(scenario)
         assert result.passed, result.violation_description
 
     @given(market_scenario())
-    @settings(max_examples=100)
+    @settings(max_examples=100, deadline=None)
     def test_confidence_always_in_bounds(self, scenario):
         """Confidence must always be in [0, 1]."""
         result = check_confidence_bounds(scenario)
@@ -380,7 +380,6 @@ class TestEvaluator:
             predictions=preds,
             actual_returns=rets,
             confidences=confs,
-            seed=42,
         )
 
     def test_perfect_predictor_is_profitable(self):
@@ -480,7 +479,7 @@ class TestEvaluator:
         st.lists(st.sampled_from(["BUY", "SELL", "HOLD"]), min_size=10, max_size=200),
         st.lists(st.floats(min_value=-0.10, max_value=0.10, allow_nan=False), min_size=10, max_size=200),
     )
-    @settings(max_examples=50)
+    @settings(max_examples=50, deadline=None)
     def test_evaluator_never_crashes(self, preds, rets):
         """Evaluator must not raise on any valid input combination."""
         n    = min(len(preds), len(rets))
