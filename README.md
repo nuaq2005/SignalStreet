@@ -9,7 +9,6 @@ Small price changes in stocks can mislead prediction models into overestimating 
 - **Interactive Dashboard**: User-friendly React-based frontend for inputting stock tickers and viewing analysis results.
 - **Robust Backend**: Flask API with data processing, ML inference, and observability.
 - **Comprehensive Testing**: Automated testing suite using pytest and hypothesis for reliability.
-- [the model](https://drive.google.com/file/d/1hfTFqFfyTzsVzxnGBkuV8CCaBc77fEeY/view?usp=sharing)
 
 ## Architecture
 
@@ -20,6 +19,7 @@ SignalStreet follows a client-server architecture with a clear separation of con
 - **Data Layer**: Handles stock data retrieval using yfinance.
 - **ML Model**: Pre-trained model loaded on-demand for predictions.
 - **Testing**: Separate testing suite for backend components.
+- - [**The Model**](https://drive.google.com/file/d/1hfTFqFfyTzsVzxnGBkuV8CCaBc77fEeY/view?usp=sharing)
 
 ### Architecture Diagram
 
