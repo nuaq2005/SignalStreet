@@ -3,7 +3,7 @@
 Small price changes in stocks can mislead prediction models into overestimating trends, causing investors to make poor decisions. SignalStreet is a full-stack web application that filters out market noise and identifies genuine signals for buy or sell actions, providing investors with reliable insights.
 
 ## Features
-
+[*Devpost Link*](https://devpost.com/software/signalstreet)
 - **Noise Filtering**: Advanced algorithms to distinguish between market noise and true signals.
 - **Real-time Analysis**: Fetches live stock data and applies machine learning models for predictions.
 - **Interactive Dashboard**: User-friendly React-based frontend for inputting stock tickers and viewing analysis results.
