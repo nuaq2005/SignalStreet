@@ -1,6 +1,8 @@
+import re
 import pandas as pd
 import numpy as np
 
+VALID_TICKER_RE = re.compile(r'^[A-Z0-9\-\.]{1,10}$')
 TRANSACTION_COST = 0.001
 
 # ---------- labels ----------
@@ -182,9 +184,20 @@ def walk_forward_splits(df, years_test=1, max_folds=3):
 
 def get_live_features(ticker):
     import yfinance as yf
-    raw = yf.download(ticker, period='220d', interval='1d', progress=False)
+    
+    if not ticker or not isinstance(ticker, str):
+        raise ValueError("ticker must be a non-empty string")
+    ticker = ticker.upper().strip()
+    if not VALID_TICKER_RE.match(ticker):
+        raise ValueError("Invalid ticker format")
+    
+    try:
+        raw = yf.download(ticker, period='220d', interval='1d', progress=False)
+    except Exception as exc:
+        raise ValueError(f"Failed to download data for {ticker}: {exc}")
+    
     if raw.empty:
-        raise ValueError('No data')
+        raise ValueError('No data available for this ticker')
     raw.columns = [c[0].lower() if isinstance(c, tuple) else c.lower()
                    for c in raw.columns]
     raw = raw.reset_index().rename(columns={'Date': 'date'})
@@ -201,14 +214,9 @@ def get_live_features(ticker):
     g = add_features(raw, *maps).dropna()
 
     if g.empty: 
-        return {
-        "feature_vector": np.zeros(len(FEATURE_COLS)),
-        "price": float(raw.close.iloc[-1]) if "close" in raw and len(raw) else 0,
-        "history": raw[["close"]] if "close" in raw else None
-        } 
-    #added in
+        raise ValueError(f"Insufficient data after feature engineering for {ticker}")
 
-    r = g.iloc[-1] 
+    r = g.iloc[-1]
     return {
         'feature_vector': r[FEATURE_COLS].values.astype(float),
         'price':          float(r.close),

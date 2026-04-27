@@ -1,18 +1,32 @@
 import time
 import sys
 import os
+import socket
  
 # Make sure sibling modules are importable
 sys.path.insert(0, os.path.dirname(__file__))
  
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import re
+import logging
  
 from data_layer import get_live_features, FEATURE_COLS
-from ml_model import predict_from_features, _BUNDLE, CLASSES
+from ml_model import get_bundle, predict_from_features, CLASSES
 
 app = Flask(__name__)
-CORS(app)  # allow React dev-server (localhost:5173 / 3000) to call us
+
+# Restrict CORS to known origins (localhost for dev)
+CORS(
+    app,
+    origins=["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"],
+    methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+    max_age=3600,
+)
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
  
  
 # ── helpers ───────────────────────────────────────────────────────────
@@ -29,9 +43,23 @@ def _safe_float(val, fallback=0.0):
  
 # ── routes ────────────────────────────────────────────────────────────
  
+@app.after_request
+def add_security_headers(response):
+    """Add security headers to prevent XSS, clickjacking, and other attacks."""
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'"
+    return response
+
+
 @app.route("/health", methods=["GET"])
 def health():
-    return jsonify({"status": "ok", "models_loaded": len(_BUNDLE["models"])})
+    bundle = get_bundle()
+    return jsonify({"status": "ok", "models_loaded": len(bundle["models"])})
  
  
 @app.route("/analyze", methods=["POST"])
@@ -42,21 +70,37 @@ def analyze():
     Response: all fields the React App.jsx expects, plus extras from the
     richer data_layer (rsi, volatility, spread, price_change, volume).
     """
-    body   = request.get_json(force=True, silent=True) or {}
+    if not request.is_json:
+        logger.warning("Non-JSON request received for /analyze")
+        return jsonify({"error": "Expected JSON payload"}), 400
+
+    try:
+        body = request.get_json(silent=True) or {}
+    except Exception as exc:
+        logger.warning(f"Invalid JSON in request: {exc}")
+        return jsonify({"error": "Invalid JSON payload"}), 400
+    
     ticker = str(body.get("ticker", "")).upper().strip()
  
     if not ticker:
         return jsonify({"error": "ticker is required"}), 400
+    
+    # Validate ticker: alphanumeric + common symbols (1-10 chars)
+    if not re.match(r'^[A-Z0-9\-\.]{1,10}$', ticker):
+        logger.warning(f"Invalid ticker format: {ticker}")
+        return jsonify({"error": "Invalid ticker format"}), 400
  
     # ── fetch live features ───────────────────────────────────────────
     t0 = time.perf_counter()
  
-    #try:
-    #    live = get_live_features(ticker)
-    #except Exception as exc:
-    #    return jsonify({"error": f"Could not fetch data for {ticker}: {exc}"}), 502
-
-    live = get_live_features(ticker)
+    try:
+        live = get_live_features(ticker)
+    except ValueError as exc:
+        logger.warning(f"Data fetch failed for {ticker}: {exc}")
+        return jsonify({"error": "No data available for this ticker"}), 404
+    except Exception as exc:
+        logger.error(f"Unexpected error fetching data for {ticker}: {exc}")
+        return jsonify({"error": "Service temporarily unavailable"}), 503
     
     if live is None or "feature_vector" not in live:
         return jsonify({
@@ -74,7 +118,8 @@ def analyze():
     try:
         decision = predict_from_features(fv)
     except Exception as exc:
-        return jsonify({"error": f"Model inference failed: {exc}"}), 500
+        logger.error(f"Model inference failed for {ticker}: {exc}")
+        return jsonify({"error": "Model inference failed"}), 500
  
     latency_ms = (time.perf_counter() - t0) * 1000
  
@@ -103,6 +148,7 @@ def analyze():
             for _, row in df_hist.iterrows()
         ]
  
+    bundle = get_bundle()
     return jsonify({
         # ── identity ──────────────────────────────────────────────────
         "ticker":      ticker,
@@ -127,13 +173,41 @@ def analyze():
  
         # ── meta ──────────────────────────────────────────────────────
         "latency_ms":   round(latency_ms, 2),
-        "n_models":     len(_BUNDLE["models"]),
+        "n_models":     len(bundle["models"]),
         "features":     feature_map,   # full feature vector for debugging
     })
  
  
 # ── entry point ───────────────────────────────────────────────────────
  
+def _port_is_free(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind(("0.0.0.0", port))
+            return True
+        except OSError:
+            return False
+
+
+def run_app():
+    preferred_port = int(os.environ.get("BACKEND_PORT", 5000))
+    for port in (preferred_port, 5001, 5002):
+        if not _port_is_free(port):
+            print(f"Port {port} is busy, trying the next available port...")
+            continue
+
+        print(f"Starting backend on port {port}...")
+        is_production = os.environ.get("ENV", "development") == "production"
+        app.run(
+            host="0.0.0.0",
+            port=port,
+            debug=not is_production,
+            use_reloader=False,
+            threaded=False,
+        )
+        return
+
 if __name__ == "__main__":
     # threaded=False keeps numpy thread-safety simple; use gunicorn for prod
-    app.run(host="0.0.0.0", port=5000, debug=True, threaded=False)
+    run_app()

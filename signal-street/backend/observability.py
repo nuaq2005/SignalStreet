@@ -31,8 +31,10 @@ FEATURE_SCHEMA_VERSION = "1.0.0"
 def hash_training_data(path: str = "data/stocks.csv") -> str:
     """SHA-256 hash of training CSV — detects data changes between runs."""
     try:
+        base_dir = os.path.dirname(__file__)
+        file_path = os.path.join(base_dir, path)
         h = hashlib.sha256()
-        with open(path, "rb") as f:
+        with open(file_path, "rb") as f:
             for chunk in iter(lambda: f.read(65536), b""):
                 h.update(chunk)
         return h.hexdigest()[:12]   # first 12 chars — enough to detect changes
@@ -203,7 +205,8 @@ def batch_predict(
     total_ms   = (t1 - t0) * 1000
     per_item   = total_ms / len(feature_matrix) if len(feature_matrix) > 0 else 0
 
-    class_to_idx = {c: i for i, c in enumerate(model.classes)}
+    classes = getattr(model, "classes", ["BUY", "SELL", "HOLD"])
+    class_to_idx = {c: i for i, c in enumerate(classes)}
     idx_to_class = {i: c for c, i in class_to_idx.items()}
 
     predicted_idx = np.argmax(probs, axis=1)

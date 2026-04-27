@@ -26,7 +26,8 @@ from data_layer import (
     TRANSACTION_COST,
 )
 
-MODEL_PATH = 'model.pkl'
+MODEL_DIR  = os.path.dirname(__file__)
+MODEL_PATH = os.path.join(MODEL_DIR, 'model.pkl')
 CLASSES    = ['BUY', 'SELL', 'HOLD']
 
 # ── activations ──────────────────────────────────────────────────────────────
@@ -62,6 +63,7 @@ class NeuralNetwork:
         self.dropout          = dropout
         self.grad_clip        = grad_clip
         self.label_smooth_eps = label_smooth_eps
+        self.classes          = CLASSES
 
         self.weights = []
         self.biases  = []
@@ -429,10 +431,17 @@ def get_bundle():
         _BUNDLE = _load_or_train()
     return _BUNDLE
 
+def _ensure_bundle():
+    global _BUNDLE
+    if _BUNDLE is None:
+        _BUNDLE = _load_or_train()
+    return _BUNDLE
+
 def _ensemble_proba(X_raw):
     """Average softmax probabilities across all fold models."""
+    bundle = _ensure_bundle()
     all_probs = []
-    for m in _BUNDLE['models']:
+    for m in bundle['models']:
         Xn = (X_raw - m.mean) / (m.std + 1e-8)
         all_probs.append(m.predict_proba(Xn))
     return np.mean(all_probs, axis=0)
@@ -459,6 +468,8 @@ class TradeDecision:
     prob_hold:  float
 
 def predict_from_features(vec, min_confidence=None):
+    if _BUNDLE is None:
+        _ensure_bundle()
     if min_confidence is None:
         min_confidence = _BUNDLE.get('min_confidence', 0.55)
     p      = _ensemble_proba(vec.reshape(1, -1))[0]
@@ -466,3 +477,28 @@ def predict_from_features(vec, min_confidence=None):
     conf   = float(p[i])
     signal = CLASSES[i] if conf >= min_confidence else 'HOLD'
     return TradeDecision(signal, conf, float(p[0]), float(p[1]), float(p[2]))
+
+
+def predict(scenario, min_confidence=None):
+    """Predict from a raw feature vector or a testing MarketScenario."""
+    if hasattr(scenario, '__iter__') and not isinstance(scenario, str):
+        vec = np.asarray(scenario, dtype=float)
+        if vec.ndim == 1 and vec.size == N_FEATURES:
+            return predict_from_features(vec, min_confidence=min_confidence)
+
+    vector = np.zeros(N_FEATURES, dtype=float)
+    if hasattr(scenario, 'price_change'):
+        vector[0] = float(scenario.price_change)
+    if hasattr(scenario, 'volume'):
+        vector[2] = float(scenario.volume) / (getattr(scenario, 'avg_volume', 1) + 1e-8)
+    if hasattr(scenario, 'spread'):
+        vector[3] = float(scenario.spread)
+    if hasattr(scenario, 'volatility'):
+        vector[4] = float(scenario.volatility)
+    if hasattr(scenario, 'price'):
+        vector[5] = float(scenario.price)
+    if hasattr(scenario, 'avg_volume'):
+        vector[25] = float(scenario.avg_volume) / (float(getattr(scenario, 'volume', 1)) + 1e-8)
+
+    vector = np.clip(vector, -10.0, 10.0)
+    return predict_from_features(vector, min_confidence=min_confidence)

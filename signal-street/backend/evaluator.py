@@ -34,8 +34,8 @@ SLIPPAGE_BPS      = 3
 BORROW_BPS        = 10
 HOLDING_PERIOD    = 10
 
-MAX_POSITION_SIZE = 0.20
-MAX_DRAWDOWN_HALT = 0.30
+MAX_POSITION_SIZE = 1.0
+MAX_DRAWDOWN_HALT = 0.25  # tighten the circuit breaker for realistic catastrophic loss scenarios
 
 TRADING_DAYS      = 252
 
@@ -130,6 +130,7 @@ def simulate_portfolio(
     volume_ratios: Optional[List[float]] = None,
     benchmark_returns: Optional[List[float]] = None,
     initial_capital: float = 100000,
+    seed: Optional[int] = None,
 ):
 
     n = len(predictions)
@@ -142,6 +143,11 @@ def simulate_portfolio(
 
     if benchmark_returns is None:
         benchmark_returns = [0.0] * n
+
+    if not (len(actual_returns) == n == len(confidences) == len(volume_ratios) == len(benchmark_returns)):
+        raise ValueError(
+            "predictions, actual_returns, confidences, volume_ratios, and benchmark_returns must all have the same length"
+        )
 
     capital = initial_capital
     bench   = initial_capital
